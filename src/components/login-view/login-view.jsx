@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 
@@ -6,8 +6,8 @@ export const LoginView = ({ onLoggedIn }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  // Function to handle form submission
   const handleSubmit = (event) => {
-    // this prevents the default behavior of the form which is to reload the entire page
     event.preventDefault();
 
     const data = {
@@ -22,18 +22,29 @@ export const LoginView = ({ onLoggedIn }) => {
       },
       body: JSON.stringify(data),
     })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-          localStorage.setItem("token", data.token);
-          onLoggedIn(data.user, data.token);
+      .then((response) => {
+        if (response.status < 400) {
+          return response.json();
         } else {
-          alert("No such user");
+          return response.json().then((data) => {
+            throw new Error(data.message || "Something went wrong");
+          });
         }
       })
-      .catch((e) => {
-        alert("Something went wrong");
+      .then((data) => {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
+        onLoggedIn(data.user, data.token);
+      })
+      .catch((error) => {
+        console.error("Error during login:", error.message);
+        if (error.message === "User not found") {
+          alert("User not found");
+        } else if (error.message === "Incorrect password") {
+          alert("Incorrect password");
+        } else {
+          alert("Something went wrong"); // Display generic error message for other errors
+        }
       });
   };
 
