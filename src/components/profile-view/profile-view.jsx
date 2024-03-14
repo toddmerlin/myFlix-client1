@@ -13,7 +13,6 @@ export const ProfileView = ({ token }) => {
   const movie = useSelector((state) => state.movies);
   const [favorites, setFavorites] = useState([]);
 
-  console.log("user", user);
   // Function to format the date to "dd-mm-yyyy" format
   const formatDate = (dateString) => {
     const date = new Date(dateString);

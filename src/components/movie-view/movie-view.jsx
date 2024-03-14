@@ -9,7 +9,7 @@ import { BsHeart, BsHeartFill } from "react-icons/bs"; // Import heart icons fro
 
 import "./movie-view.scss";
 
-export const MovieView = ({ setUser }) => {
+export const MovieView = () => {
   const user = useSelector((state) => state.user);
   const { movieTitle } = useParams();
   const movies = useSelector((state) => state.movies);
