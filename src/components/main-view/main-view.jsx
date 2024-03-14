@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { Row, Col } from "react-bootstrap";
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// import { useParams } from "react-  router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { setMovies } from "../../redux/reducers/movies";
+import { setUser } from "../../redux/reducers/user/user";
 
 import { MovieCard } from "../movie-card/movie-card";
 import { MovieView } from "../movie-view/movie-view";
@@ -12,24 +15,25 @@ import { NavigationBar } from "../navigation-bar/navigation-bar";
 import { ProfileView } from "../profile-view/profile-view";
 import { UpdateUser } from "../profile-view/update-user";
 
-import { Container, Row, Col } from "react-bootstrap";
-
 export const MainView = () => {
   const storedUser = JSON.parse(localStorage.getItem("user"));
-  const storedToken = localStorage.getItem("token");
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
 
-  const [movies, setMovies] = useState([]);
+  const storedToken = localStorage.getItem("token");
+
+  const movies = useSelector((state) => state.movies);
+  const user = useSelector((state) => state.user);
+
   const [similarMovies, setSimilarMovies] = useState([]);
 
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    if (!token) {
+    if (!storedToken) {
       return;
     }
 
     fetch("https://myflix-ssv7.onrender.com/movies", {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${"token"}` },
     })
       .then((response) => response.json())
       .then((data) => {
@@ -54,27 +58,27 @@ export const MainView = () => {
           };
         });
 
-        setMovies(moviesFromApi);
+        dispatch(setMovies(moviesFromApi));
       })
       .catch((error) => {
         console.error("Error fetching movies:", error);
       });
-  }, [token]);
+  }, [dispatch, storedToken]);
 
   const handleUpdateUser = (updatedUser) => {
     setUser(updatedUser);
   };
+
+  console.log("movies:", movies);
 
   return (
     <BrowserRouter>
       <Row>
         <>
           <NavigationBar
-            user={user}
             onLoggedOut={() => {
               setUser(null);
               setToken(null);
-              return <Navigate to="/login" />;
             }}
           />
         </>
@@ -111,8 +115,7 @@ export const MainView = () => {
                 ) : (
                   <Col md={5}>
                     <LoginView
-                      onLoggedIn={(user, token) => {
-                        setUser(user);
+                      onLoggedIn={(token) => {
                         setToken(token);
                       }}
                     />
@@ -132,10 +135,7 @@ export const MainView = () => {
                 ) : (
                   <Col md={8}>
                     <MovieView
-                      movies={movies}
-                      user={user}
                       setUser={setUser}
-                      token={token}
                       similarMovies={similarMovies}
                     />
                   </Col>
@@ -172,9 +172,6 @@ export const MainView = () => {
                   <Navigate to="/login" replace />
                 ) : (
                   <ProfileView
-                    user={user}
-                    token={token}
-                    movie={movies}
                     onLoggedOut={() => {
                       setUser(null);
                       setToken(null);
@@ -192,8 +189,9 @@ export const MainView = () => {
                   <Navigate to="/login" replace />
                 ) : (
                   <UpdateUser
-                    user={user}
-                    token={token}
+                    onLoggedIn={(token) => {
+                      setToken(token);
+                    }}
                     onLoggedOut={() => {
                       setUser(null);
                       setToken(null);

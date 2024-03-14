@@ -1,14 +1,21 @@
 import { Navbar, Container, Nav } from "react-bootstrap";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+
+import { setUser } from "../../redux/reducers/user/user";
 
 import { Link } from "react-router-dom";
 
 import "./navigation-bar.scss";
 
-export const NavigationBar = ({ user, onLoggedOut }) => {
+export const NavigationBar = () => {
+  const user = useSelector((state) => state.user);
+
   const [collapsed, setCollapsed] = useState(true);
   const { pathname } = useLocation();
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     // Collapse the Navbar whenever the URL path changes
@@ -46,7 +53,9 @@ export const NavigationBar = ({ user, onLoggedOut }) => {
                   Profile
                 </Nav.Link>
 
-                <Nav.Link onClick={onLoggedOut}>Logout</Nav.Link>
+                <Nav.Link onClick={() => dispatch(setUser(null))}>
+                  Logout
+                </Nav.Link>
               </>
             )}
           </Nav>

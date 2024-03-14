@@ -1,18 +1,22 @@
 import { useParams } from "react-router";
 import { Button, Card, Col, Row } from "react-bootstrap";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 
 import { Link } from "react-router-dom";
-
+import { setUser } from "../../redux/reducers/user/user";
 import { BsHeart, BsHeartFill } from "react-icons/bs"; // Import heart icons from react-icons
 
 import "./movie-view.scss";
 
-export const MovieView = ({ movies, user, token, setUser }) => {
+export const MovieView = ({ setUser }) => {
+  const user = useSelector((state) => state.user);
   const { movieTitle } = useParams();
+  const movies = useSelector((state) => state.movies);
   const movie = movies.find((m) => m.Title === movieTitle);
   const [similarMovies, setSimilarMovies] = useState([]);
-  const [isFavorite, setIsFavorite] = useState([]);
+
+  const dispatch = useDispatch();
 
   // this function is used to get similar movies based on the movies genre and exclude the current movie
   useEffect(() => {
@@ -20,8 +24,7 @@ export const MovieView = ({ movies, user, token, setUser }) => {
       (m) => m.Genre.Name === movie.Genre.Name && m.id !== movie.id
     );
     setSimilarMovies(similar);
-    setIsFavorite(user && user.FavoriteMovies.includes(movie.id));
-  }, [movies, user, movie]);
+  }, [user, movie]);
 
   // console.log(
   //   "Favorite movies:",
@@ -35,6 +38,9 @@ export const MovieView = ({ movies, user, token, setUser }) => {
 
   // Function to handle both add and remove users favorite movies
   const handleFavoriteClick = async (movieId) => {
+    // console.log(favorites);
+    const isFavorite = user && user.FavoriteMovies.includes(movie.id);
+
     try {
       const method = isFavorite ? "DELETE" : "POST";
 
@@ -44,38 +50,29 @@ export const MovieView = ({ movies, user, token, setUser }) => {
         {
           method: method,
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
 
       // Check if the fetch request was successful
       if (response.ok) {
-        console.log(response);
         // Update the user's favorite movies
-        setIsFavorite(!isFavorite); // Toggle the favorite status
-        // Update the user state to reflect the change
-        const updatedUser = { ...user };
-        // Update the user's favorite movies
-        if (isFavorite) {
-          // Remove the movie from the list
-          updatedUser.FavoriteMovies = updatedUser.FavoriteMovies.filter(
-            (id) => id !== movieId
-          );
-        } else {
-          // Add the movie to the list
-          updatedUser.FavoriteMovies = [...updatedUser.FavoriteMovies, movieId];
-        }
-        // Update the user state to include the added or removed movie
-
-        setUser(updatedUser);
-
-        // Display a success message
-        const message = isFavorite ? "removed from" : "added to";
-        alert(`Movie ${movie.Title} ${message} favorites.`);
+        dispatch(
+          setUser({
+            ...user,
+            FavoriteMovies: isFavorite
+              ? user.FavoriteMovies.filter((id) => id !== movieId)
+              : [...user.FavoriteMovies, movieId],
+          })
+        );
+        alert(
+          `${movie.Title} ${
+            isFavorite ? "removed from" : "added to"
+          }  favorites`
+        );
       } else {
-        // Display an error message
-        console.error("Failed to update favorites:", response.statusText);
+        console.error("Failed to update favorites:");
       }
     } catch (error) {
       console.error("Error updating favorites:", error);
@@ -115,7 +112,11 @@ export const MovieView = ({ movies, user, token, setUser }) => {
             variant="danger"
             onClick={() => handleFavoriteClick(movie.id)}
           >
-            {isFavorite ? <BsHeartFill /> : <BsHeart />}
+            {user && user.FavoriteMovies.includes(movie.id) ? (
+              <BsHeartFill />
+            ) : (
+              <BsHeart />
+            )}
           </Button>
         </Col>
       </Card.Body>

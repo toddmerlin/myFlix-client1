@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import { Container, Form, Button, Col } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { setUser } from "../../redux/reducers/user/user";
 
-export const UpdateUser = ({ user, token, onUpdateUser }) => {
+export const UpdateUser = () => {
+  const user = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // State to manage whether the form is visible or not
   const [formData, setFormData] = useState({
-    id: user.id,
+    id: user.Id,
     Username: user.Username,
     Password: "",
     Email: user.Email,
@@ -15,16 +19,23 @@ export const UpdateUser = ({ user, token, onUpdateUser }) => {
     FavoriteMovies: user.FavoriteMovies,
   });
 
+  console.log("Form data:", formData);
+  console.log("SetformData:", setFormData);
+
   // Function to handle input changes
   const handleChange = (event) => {
+    // Get the name and value of the input
     const { name, value } = event.target;
+    // Update the state with the new value
     setFormData({
       ...formData,
       [name]: value,
     });
   };
 
+  // Function to handle form submission
   const handleSubmit = async (event) => {
+    // Prevent the default form submission
     event.preventDefault();
 
     const requestBody = {
@@ -38,20 +49,21 @@ export const UpdateUser = ({ user, token, onUpdateUser }) => {
       body: JSON.stringify(requestBody),
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     })
       .then((response) => {
         if (response.ok) {
-          return response.json();
+          // Merge the updated data with the existing user data
+          const updatedUser = { ...user, ...requestBody };
+          dispatch(setUser(updatedUser));
+          // Update user data in Redux store
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          alert(`${user.Username}` + " updated successfully");
+          navigate("/users"); // Redirect to user profile page
         } else {
-          throw new Error("Error updating user!!");
+          throw new Error("Failed to update user");
         }
-      })
-      .then((updatedUser) => {
-        // Handle success, such as displaying a success message or redirecting the user
-        onUpdateUser(updatedUser);
-        navigate("/users");
       })
       .catch((error) => {
         console.error("Error updating user:", error);

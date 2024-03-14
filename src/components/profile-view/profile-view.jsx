@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 import { MovieCard } from "../movie-card/movie-card";
 
 // import { UpdateUser } from "./update-user";
 import "./profile-view.scss";
 
-export const ProfileView = ({ user, token, movie }) => {
+export const ProfileView = ({ token }) => {
+  const user = useSelector((state) => state.user);
+  const movie = useSelector((state) => state.movies);
   const [favorites, setFavorites] = useState([]);
+
+  console.log("user", user);
   // Function to format the date to "dd-mm-yyyy" format
   const formatDate = (dateString) => {
     const date = new Date(dateString);

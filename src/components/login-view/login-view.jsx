@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../redux/reducers/user/user";
 
-export const LoginView = ({ onLoggedIn }) => {
+export const LoginView = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  const dispatch = useDispatch();
 
   // Function to handle form submission
   const handleSubmit = (event) => {
@@ -34,7 +38,9 @@ export const LoginView = ({ onLoggedIn }) => {
       .then((data) => {
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("token", data.token);
-        onLoggedIn(data.user, data.token);
+        dispatch(setUser(data.user));
+
+        console.log(data.token);
       })
       .catch((error) => {
         console.error("Error during login:", error.message);
